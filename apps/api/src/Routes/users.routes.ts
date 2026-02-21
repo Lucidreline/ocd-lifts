@@ -14,7 +14,11 @@ const router = Router()
 // get all users
 router.get('/', async (req: Request, res: Response) => {
     try {
-        const allUsers = await prisma.user.findMany()
+        const allUsers = await prisma.user.findMany({
+            include: {
+                sessions: true
+            }
+        })
         res.json(allUsers)
     }
     catch (err) {
