@@ -5,10 +5,93 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
   output   = "../generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+model User {
+  id        Int        @id @default(autoincrement())
+  email     String     @unique
+  sessions  Session[]
+  exercises Exercise[]
+  sets      Set[]
+  PRs       PR[]
+}
+
+model Session {
+  id         Int      @id @default(autoincrement())
+  categories String[]
+  user       User     @relation(fields: [userId], references: [id])
+  userId     Int
+  sets       Set[]
+  createdAt  DateTime @default(now())
+  PRs        PR[]
+}
+
+model Exercise {
+  id        Int     @id @default(autoincrement())
+  name      String
+  variation String?
+  repRange  String?
+  user      User    @relation(fields: [userId], references: [id])
+  userId    Int
+  sets      Set[]
+  PRs       PR[]
+
+  muscleGroups MuscleGroup[]
+}
+
+model MuscleGroup {
+  id           Int     @id @default(autoincrement())
+  priority     Int
+  vagueName    String
+  specificName String?
+
+  exercise   Exercise @relation(fields: [exerciseId], references: [id])
+  exerciseId Int
+
+  @@unique([exerciseId, priority])
+}
+
+model Set {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  session    Session  @relation(fields: [sessionId], references: [id])
+  user       User     @relation(fields: [userId], references: [id])
+  exercise   Exercise @relation(fields: [exerciseId], references: [id])
+  sessionId  Int
+  userId     Int
+  exerciseId Int
+
+  intensity Float
+  notes     String?
+  repCount  Int
+  weightLbs Float
+  score     Float
+
+  pr PR[]
+}
+
+model PR {
+  id Int @id @default(autoincrement())
+
+  score     Int
+  weightLbs Float
+  repCount  Int
+  createdAt DateTime @default(now())
+
+  user       User     @relation(fields: [userId], references: [id])
+  userId     Int
+  session    Session  @relation(fields: [sessionId], references: [id])
+  sessionId  Int
+  set        Set      @relation(fields: [setId], references: [id])
+  setId      Int      @unique
+  exercise   Exercise @relation(fields: [exerciseId], references: [id])
+  exerciseId Int
 }
