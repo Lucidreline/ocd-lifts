@@ -1,5 +1,5 @@
 // this is our front door
-
+import "dotenv/config";
 import express, { Request, Response } from 'express'
 import cors from 'cors'
 

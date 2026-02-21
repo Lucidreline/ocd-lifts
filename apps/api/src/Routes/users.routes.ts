@@ -1,6 +1,9 @@
 import { Request, Response, Router } from "express";
 import { prisma } from '../lib/prisma.js'
-import jwt from 'jsonwebtoken'
+import { SignJWT } from 'jose'
+import { authenticate } from "../middleware/authenticate.js";
+
+// import { authenticate } from "../middleware/authenticate.js";
 
 interface UserInput {
     username: string
@@ -45,7 +48,7 @@ router.post('/', async (req: Request, res: Response) => {
         res.json(newUser)
     }
     catch (err) {
-        res.status(500).json({ msg: `Couldn't make your boi ${body.username}` })
+        res.status(500).json({ error: `Couldn't make your boi ${body.username}. Might be a dupe.` })
     }
 })
 
@@ -62,11 +65,13 @@ router.post('/login', async (req: Request, res: Response) => {
             return
         }
 
-        const token = jwt.sign(
-            { userId: user.id },
-            process.env.JWT_SECRET!,
-            { expiresIn: '7d' }
-        )
+        const secret = new TextEncoder().encode(process.env.JWT_SECRET!)
+
+
+        const token = await new SignJWT({ userId: user.id })
+            .setProtectedHeader({ alg: 'HS256' })
+            .setExpirationTime('7d')
+            .sign(secret)
 
         res.json({ token })
     }
