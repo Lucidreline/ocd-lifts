@@ -58,6 +58,7 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
 
             }
         })
+        res.json(newExercise)
     } catch (err) {
         res.status(500).json({ error: `Coudn't create your excersise!!` })
     }

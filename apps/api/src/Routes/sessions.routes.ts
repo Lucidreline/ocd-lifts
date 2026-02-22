@@ -2,11 +2,19 @@ import { Request, Response, Router } from 'express'
 import { prisma } from '../lib/prisma.js'
 import { authenticate } from '../middleware/authenticate.js'
 
-const router = Router()
-
 interface SessionInput {
     categories: string[]
 }
+
+interface setInput {
+    exerciseId: number,
+    intensity: number,
+    notes: string,
+    repCount: number,
+    weightLbs: number
+}
+
+const router = Router()
 
 router.get('/', authenticate, async (req: Request, res: Response) => {
     try {
@@ -51,6 +59,13 @@ router.get('/:sessionId/sets', authenticate, async (req: Request, res: Response)
             where: {
                 userId: req.userId,
                 sessionId: Number(sessionId)
+            },
+            include: {
+                exercise: {
+                    include: {
+                        muscleGroups: true
+                    }
+                }
             }
         })
         res.json(allSessionSets)
@@ -60,24 +75,40 @@ router.get('/:sessionId/sets', authenticate, async (req: Request, res: Response)
     }
 })
 
+
 router.post('/:sessionId/sets', authenticate, async (req: Request, res: Response) => {
-    const body = req.body
+    const body = req.body as setInput
     const userId = req.userId
+
+    if (!userId) {
+        res.status(401).json({ error: 'Unauthorized' })
+        return
+    }
+
+    // -5 * 10 = -50
+    // -2 * 10 = -20
+    // 0 * 10 = 10
+
+    let score;
+    if (body.weightLbs == 0)
+        score = body.repCount
+    else
+        score = body.repCount * body.weightLbs
+
     const { sessionId } = req.params
     try {
-        const allSessionSets = await prisma.set.create({
+        const createdSet = await prisma.set.create({
             data: {
                 ...body,
                 sessionId: Number(sessionId),
                 userId,
-
-
+                score
             }
         })
-        res.json(allSessionSets)
+        res.json(createdSet)
     }
     catch (err) {
-        res.status(500).json({ error: "Coudn't find your sets for that session." })
+        res.status(500).json({ error: "Coudn't create your set." })
     }
 })
 
