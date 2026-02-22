@@ -57,4 +57,21 @@ router.put('/:setId', authenticate, async (req: Request, res: Response) => {
   }
 });
 
+router.delete('/:setId', authenticate, async (req: Request, res: Response) => {
+  const { setId } = req.params;
+  try {
+    //delete set normally
+    const deletedSet = await prisma.set.delete({
+      where: {
+        id: Number(setId)
+      }
+    });
+
+    res.json(deletedSet);
+    // make sure the PR is deleted as well
+  } catch (err) {
+    res.status(500).json({ error: "Couldn't delete the set" });
+  }
+});
+
 export default router;
