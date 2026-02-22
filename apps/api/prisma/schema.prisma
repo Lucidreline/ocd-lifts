@@ -81,7 +81,7 @@ model Set {
 model PR {
   id Int @id @default(autoincrement())
 
-  score     Int
+  score     Float
   weightLbs Float
   repCount  Int
   createdAt DateTime @default(now())

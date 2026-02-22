@@ -1,18 +1,8 @@
 import { Request, Response, Router } from 'express'
 import { prisma } from '../lib/prisma.js'
 import { authenticate } from '../middleware/authenticate.js'
-
-interface SessionInput {
-    categories: string[]
-}
-
-interface setInput {
-    exerciseId: number,
-    intensity: number,
-    notes: string,
-    repCount: number,
-    weightLbs: number
-}
+import { prInput, SessionInput, setInput } from '../types/workout.types.js'
+import { isPr, createPr } from '../lib/prUtils.js'
 
 const router = Router()
 
@@ -63,7 +53,8 @@ router.get('/:sessionId/sets', authenticate, async (req: Request, res: Response)
             include: {
                 exercise: {
                     include: {
-                        muscleGroups: true
+                        muscleGroups: true,
+                        PRs: true
                     }
                 }
             }
@@ -74,39 +65,6 @@ router.get('/:sessionId/sets', authenticate, async (req: Request, res: Response)
         res.status(500).json({ error: "Coudn't find your sets for that session." })
     }
 })
-
-interface prInput {
-    userId: number
-    sessionId: number
-    exerciseId: number
-    setId: number
-    score: number
-    weightLbs: number
-    repCount: number
-}
-
-const isPr = async (body: prInput) => {
-    const exercisePrs = await prisma.pR.findMany({
-        where: { exerciseId: body.exerciseId }
-    })
-
-    if (exercisePrs.length === 0) return true
-
-    const bestScore = Math.max(...exercisePrs.map(pr => pr.score))
-    return body.score > bestScore
-}
-
-const createPr = async (body: prInput) => {
-    try {
-        const newPr = await prisma.pR.create({
-            data: body
-        })
-        return newPr
-    }
-    catch (err) {
-        return {}
-    }
-}
 
 router.post('/:sessionId/sets', authenticate, async (req: Request, res: Response) => {
     const body = req.body as setInput
@@ -144,13 +102,13 @@ router.post('/:sessionId/sets', authenticate, async (req: Request, res: Response
             repCount: body.repCount
         } as prInput
 
-        if (await isPr(prBody)) {
-            console.log("Yoo you hit a PR")
-            createPr(prBody)
+        const isPrSet = await isPr(prBody)
+        if (isPrSet) {
+            await createPr(prBody)
         }
 
-
-        res.json({ ...createdSet, pr: prBody })
+        const pr = isPrSet ? prBody : {}
+        res.json({ ...createdSet, pr })
     }
     catch (err) {
         res.status(500).json({ error: "Coudn't create your set." })
