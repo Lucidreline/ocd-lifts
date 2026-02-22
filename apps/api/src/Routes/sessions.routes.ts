@@ -1,118 +1,111 @@
-import { Request, Response, Router } from 'express'
-import { prisma } from '../lib/prisma.js'
-import { authenticate } from '../middleware/authenticate.js'
-import { prInput, SessionInput, setInput } from '../types/workout.types.js'
-import { isPr, createPr } from '../lib/prUtils.js'
+import { Request, Response, Router } from 'express';
+import { prisma } from '../lib/prisma.js';
+import { authenticate } from '../middleware/authenticate.js';
+import { prInput, sessionInput, setInput } from '../types/workout.types.js';
+import { isPr, createPr } from '../lib/prUtils.js';
 
-const router = Router()
+const router = Router();
 
 router.get('/', authenticate, async (req: Request, res: Response) => {
-    try {
-        const allUserSessions = await prisma.session.findMany({
-            where: {
-                userId: req.userId
-            }
-        });
-        res.json(allUserSessions)
-    }
-    catch (err) {
-        res.status(500).json({ error: `Couldn't find session for ` })
-    }
-})
+  const userId = req.userId;
+
+  try {
+    const allUserSessions = await prisma.session.findMany({
+      where: {
+        userId
+      }
+    });
+    res.json(allUserSessions);
+  } catch (err) {
+    res.status(500).json({ error: `Couldn't find session for user ${userId}` });
+  }
+});
 
 router.post('/', authenticate, async (req: Request, res: Response) => {
-    const userId = req.userId
-    const body = req.body as SessionInput
-    try {
-        if (!userId) {
-            res.status(401).json({ error: 'Unauthorized' })
-            return
-        }
-        const newSession = await prisma.session.create({
-            data: {
-                ...body,
-                userId
-            }
-        })
-        res.json(newSession)
-    }
-    catch (err) {
-        res.status(500).json({ error: `Coudn't find sessions for user ${userId}` })
-    }
-})
+  const body = req.body as sessionInput;
+  try {
+    const newSession = await prisma.session.create({
+      data: {
+        ...body,
+        userId: req.userId!
+      }
+    });
+    res.json(newSession);
+  } catch (err) {
+    res.status(500).json({ error: `Couldn't create new session` });
+  }
+});
 
 // sets
-router.get('/:sessionId/sets', authenticate, async (req: Request, res: Response) => {
-    const { sessionId } = req.params
+router.get(
+  '/:sessionId/sets',
+  authenticate,
+  async (req: Request, res: Response) => {
+    const { sessionId } = req.params;
+
     try {
-        const allSessionSets = await prisma.set.findMany({
-            where: {
-                userId: req.userId,
-                sessionId: Number(sessionId)
-            },
+      const allSessionSets = await prisma.set.findMany({
+        where: {
+          userId: req.userId!,
+          sessionId: Number(sessionId)
+        },
+        include: {
+          exercise: {
             include: {
-                exercise: {
-                    include: {
-                        muscleGroups: true,
-                        PRs: true
-                    }
-                }
+              muscleGroups: true,
+              PRs: true
             }
-        })
-        res.json(allSessionSets)
+          }
+        }
+      });
+      res.json(allSessionSets);
+    } catch (err) {
+      res
+        .status(500)
+        .json({ error: "Couldn't find your sets for that session." });
     }
-    catch (err) {
-        res.status(500).json({ error: "Coudn't find your sets for that session." })
-    }
-})
+  }
+);
 
-router.post('/:sessionId/sets', authenticate, async (req: Request, res: Response) => {
-    const body = req.body as setInput
-    const userId = req.userId
-
-    if (!userId) {
-        res.status(401).json({ error: 'Unauthorized' })
-        return
-    }
+router.post(
+  '/:sessionId/sets',
+  authenticate,
+  async (req: Request, res: Response) => {
+    const body = req.body as setInput;
 
     let score;
-    if (body.weightLbs == 0)
-        score = body.repCount
-    else
-        score = body.repCount * body.weightLbs
+    if (body.weightLbs === 0) score = body.repCount;
+    else score = body.repCount * body.weightLbs;
 
-    const { sessionId } = req.params
+    const { sessionId } = req.params;
     try {
-        const createdSet = await prisma.set.create({
-            data: {
-                ...body,
-                sessionId: Number(sessionId),
-                userId,
-                score
-            }
-        })
-
-        const prBody = {
-            userId,
-            sessionId: Number(sessionId),
-            exerciseId: body.exerciseId,
-            setId: createdSet.id,
-            score,
-            weightLbs: body.weightLbs,
-            repCount: body.repCount
-        } as prInput
-
-        const isPrSet = await isPr(prBody)
-        if (isPrSet) {
-            await createPr(prBody)
+      const createdSet = await prisma.set.create({
+        data: {
+          ...body,
+          sessionId: Number(sessionId),
+          userId: req.userId!,
+          score
         }
+      });
 
-        const pr = isPrSet ? prBody : {}
-        res.json({ ...createdSet, pr })
-    }
-    catch (err) {
-        res.status(500).json({ error: "Coudn't create your set." })
-    }
-})
+      const prBody = {
+        userId: req.userId!,
+        sessionId: Number(sessionId),
+        exerciseId: body.exerciseId,
+        setId: createdSet.id,
+        score,
+        weightLbs: body.weightLbs,
+        repCount: body.repCount
+      } as prInput;
 
-export default router
+      const isPrSet = await isPr(prBody);
+
+      const pr = isPrSet ? await createPr(prBody) : null;
+      res.json({ ...createdSet, pr });
+    } catch (err) {
+      res.status(500).json({ error: "Couldn't create your set or PR." });
+    }
+  }
+);
+
+export default router;

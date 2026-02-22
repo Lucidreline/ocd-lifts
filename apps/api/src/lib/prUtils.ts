@@ -1,25 +1,17 @@
-import { prisma } from './prisma.js'
-import { prInput } from '../types/workout.types.js'
+import { prisma } from './prisma.js';
+import { prInput } from '../types/workout.types.js';
 
 export const isPr = async (body: prInput) => {
-    const exercisePrs = await prisma.pR.findMany({
-        where: { exerciseId: body.exerciseId }
-    })
-
-    if (exercisePrs.length === 0) return true
-
-    const bestScore = Math.max(...exercisePrs.map(pr => pr.score))
-    return body.score > bestScore
-}
+  const bestPr = await prisma.pR.findFirst({
+    where: { exerciseId: body.exerciseId },
+    orderBy: { score: 'desc' }
+  });
+  return !bestPr || body.score > bestPr.score;
+};
 
 export const createPr = async (body: prInput) => {
-    try {
-        const newPr = await prisma.pR.create({
-            data: body
-        })
-        return newPr
-    }
-    catch (err) {
-        return {}
-    }
-}
+  const newPr = await prisma.pR.create({
+    data: body
+  });
+  return newPr;
+};
