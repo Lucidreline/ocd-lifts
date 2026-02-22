@@ -19,6 +19,7 @@ router.get('/', async (req: Request, res: Response) => {
   }
 });
 
+// find user by id
 router.get('/:id', async (req: Request, res: Response) => {
   const { id } = req.params;
 
@@ -49,6 +50,7 @@ router.post('/', async (req: Request, res: Response) => {
   }
 });
 
+// login user, puts the user id into the headers to grab later
 router.post('/login', async (req: Request, res: Response) => {
   const { username } = req.body as userInput;
 
@@ -74,5 +76,25 @@ router.post('/login', async (req: Request, res: Response) => {
     res.status(500).json({ error: `Couldn't log you in boss` });
   }
 });
+
+// update user
+router.put('/:userId', async (req: Request, res: Response) => {
+  const { userId } = req.params;
+  const body = req.body as userInput;
+
+  try {
+    const updatedUser = await prisma.user.update({
+      where: {
+        id: Number(userId)
+      },
+      data: body
+    });
+    res.json(updatedUser);
+  } catch (err) {
+    res.status(500).json({ error: "Coudn't update your user" });
+  }
+});
+
+// delete user
 
 export default router;
