@@ -75,6 +75,38 @@ router.get('/:sessionId/sets', authenticate, async (req: Request, res: Response)
     }
 })
 
+interface prInput {
+    userId: number
+    sessionId: number
+    exerciseId: number
+    setId: number
+    score: number
+    weightLbs: number
+    repCount: number
+}
+
+const isPr = async (body: prInput) => {
+    const exercisePrs = await prisma.pR.findMany({
+        where: { exerciseId: body.exerciseId }
+    })
+
+    if (exercisePrs.length === 0) return true
+
+    const bestScore = Math.max(...exercisePrs.map(pr => pr.score))
+    return body.score > bestScore
+}
+
+const createPr = async (body: prInput) => {
+    try {
+        const newPr = await prisma.pR.create({
+            data: body
+        })
+        return newPr
+    }
+    catch (err) {
+        return {}
+    }
+}
 
 router.post('/:sessionId/sets', authenticate, async (req: Request, res: Response) => {
     const body = req.body as setInput
@@ -84,10 +116,6 @@ router.post('/:sessionId/sets', authenticate, async (req: Request, res: Response
         res.status(401).json({ error: 'Unauthorized' })
         return
     }
-
-    // -5 * 10 = -50
-    // -2 * 10 = -20
-    // 0 * 10 = 10
 
     let score;
     if (body.weightLbs == 0)
@@ -105,7 +133,24 @@ router.post('/:sessionId/sets', authenticate, async (req: Request, res: Response
                 score
             }
         })
-        res.json(createdSet)
+
+        const prBody = {
+            userId,
+            sessionId: Number(sessionId),
+            exerciseId: body.exerciseId,
+            setId: createdSet.id,
+            score,
+            weightLbs: body.weightLbs,
+            repCount: body.repCount
+        } as prInput
+
+        if (await isPr(prBody)) {
+            console.log("Yoo you hit a PR")
+            createPr(prBody)
+        }
+
+
+        res.json({ ...createdSet, pr: prBody })
     }
     catch (err) {
         res.status(500).json({ error: "Coudn't create your set." })
