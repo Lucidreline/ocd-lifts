@@ -12,7 +12,8 @@ router.get('/', authenticate, async (req: Request, res: Response) => {
   try {
     const allUserExercises = await prisma.exercise.findMany({
       where: {
-        userId
+        userId,
+        isArchived: false
       },
       include: {
         muscleGroups: true
@@ -68,6 +69,28 @@ router.put(
       res.json(updatedExercise);
     } catch (err) {
       res.status(500).json({ error: "Couldn't update your exercise" });
+    }
+  }
+);
+
+router.delete(
+  '/:exerciseId',
+  authenticate,
+  async (req: Request, res: Response) => {
+    const { exerciseId } = req.params;
+
+    try {
+      const softDeleteExercise = await prisma.exercise.update({
+        where: {
+          id: Number(exerciseId)
+        },
+        data: {
+          isArchived: true
+        }
+      });
+      res.json(softDeleteExercise);
+    } catch (err) {
+      res.status(500).json({ error: "Couldn't " });
     }
   }
 );

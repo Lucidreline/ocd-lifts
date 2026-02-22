@@ -43,6 +43,7 @@ model Exercise {
   PRs       PR[]
 
   muscleGroups MuscleGroup[]
+  isArchived Boolean @default(false)
 }
 
 model MuscleGroup {
