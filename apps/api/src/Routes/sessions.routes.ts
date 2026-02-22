@@ -36,6 +36,24 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
   }
 });
 
+// update a session
+router.put('/:sessionId', authenticate, async (req: Request, res: Response) => {
+  const { sessionId } = req.params;
+  const body = req.body as sessionInput;
+
+  try {
+    const updatedSession = await prisma.session.update({
+      where: {
+        id: Number(sessionId)
+      },
+      data: body
+    });
+    res.json(updatedSession);
+  } catch (err) {
+    res.status(500).json({ error: "Couldn't Update this session" });
+  }
+});
+
 // sets
 router.get(
   '/:sessionId/sets',
