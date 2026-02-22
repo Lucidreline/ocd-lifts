@@ -25,7 +25,7 @@ model User {
 model Session {
   id         Int      @id @default(autoincrement())
   categories String[]
-  user       User     @relation(fields: [userId], references: [id])
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId     Int
   sets       Set[]
   createdAt  DateTime @default(now())
@@ -37,12 +37,14 @@ model Exercise {
   name      String
   variation String?
   repRange  String?
-  user      User    @relation(fields: [userId], references: [id])
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    Int
   sets      Set[]
   PRs       PR[]
+  categories String[]
 
   muscleGroups MuscleGroup[]
+  isArchived Boolean @default(false)
 }
 
 model MuscleGroup {
@@ -51,7 +53,7 @@ model MuscleGroup {
   vagueName    String
   specificName String?
 
-  exercise   Exercise @relation(fields: [exerciseId], references: [id])
+  exercise   Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
   exerciseId Int
 
   @@unique([exerciseId, priority])
@@ -62,9 +64,9 @@ model Set {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  session    Session  @relation(fields: [sessionId], references: [id])
-  user       User     @relation(fields: [userId], references: [id])
-  exercise   Exercise @relation(fields: [exerciseId], references: [id])
+  session    Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exercise   Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
   sessionId  Int
   userId     Int
   exerciseId Int
@@ -86,12 +88,12 @@ model PR {
   repCount  Int
   createdAt DateTime @default(now())
 
-  user       User     @relation(fields: [userId], references: [id])
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId     Int
-  session    Session  @relation(fields: [sessionId], references: [id])
+  session    Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   sessionId  Int
-  set        Set      @relation(fields: [setId], references: [id])
+  set        Set      @relation(fields: [setId], references: [id], onDelete: Cascade)
   setId      Int      @unique
-  exercise   Exercise @relation(fields: [exerciseId], references: [id])
+  exercise   Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
   exerciseId Int
 }

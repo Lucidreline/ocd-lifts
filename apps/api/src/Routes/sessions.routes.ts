@@ -1,8 +1,10 @@
 import { Request, Response, Router } from 'express';
 import { prisma } from '../lib/prisma.js';
-import { authenticate } from '../middleware/authenticate.js';
+
 import { prInput, sessionInput, setInput } from '../types/workout.types.js';
+import { authenticate } from '../middleware/authenticate.js';
 import { isPr, createPr } from '../lib/prUtils.js';
+import { calcScore } from '../lib/setUtils.js';
 
 const router = Router();
 
@@ -36,6 +38,42 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
   }
 });
 
+// update a session
+router.put('/:sessionId', authenticate, async (req: Request, res: Response) => {
+  const { sessionId } = req.params;
+  const body = req.body as sessionInput;
+
+  try {
+    const updatedSession = await prisma.session.update({
+      where: {
+        id: Number(sessionId)
+      },
+      data: body
+    });
+    res.json(updatedSession);
+  } catch (err) {
+    res.status(500).json({ error: "Couldn't Update this session" });
+  }
+});
+
+router.delete(
+  '/:sessionId',
+  authenticate,
+  async (req: Request, res: Response) => {
+    const { sessionId } = req.params;
+    try {
+      const deletedSession = await prisma.session.delete({
+        where: {
+          id: Number(sessionId)
+        }
+      });
+      res.json(deletedSession);
+    } catch (err) {
+      res.status(500).json({ error: "Couldn't delete this session" });
+    }
+  }
+);
+
 // sets
 router.get(
   '/:sessionId/sets',
@@ -67,15 +105,48 @@ router.get(
   }
 );
 
+// get exercises for session
+router.get(
+  '/:sessionId/suggested-exercises',
+  authenticate,
+  async (req: Request, res: Response) => {
+    const { sessionId } = req.params;
+    const userId = req.userId;
+
+    try {
+      const session = await prisma.session.findUnique({
+        where: { id: Number(sessionId) }
+      });
+
+      if (!session) {
+        res.status(404).json({ error: 'Session not found' });
+        return;
+      }
+
+      const suggestedExercises = await prisma.exercise.findMany({
+        where: {
+          userId,
+          isArchived: false,
+          categories: {
+            hasSome: session.categories
+          }
+        }
+      });
+
+      res.json(suggestedExercises);
+    } catch (err) {
+      res.status(500).json({ error: "Couldn't find suggested exercises" });
+    }
+  }
+);
+
 router.post(
   '/:sessionId/sets',
   authenticate,
   async (req: Request, res: Response) => {
     const body = req.body as setInput;
 
-    let score;
-    if (body.weightLbs === 0) score = body.repCount;
-    else score = body.repCount * body.weightLbs;
+    const score = calcScore(body);
 
     const { sessionId } = req.params;
     try {
