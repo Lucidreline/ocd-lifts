@@ -54,6 +54,25 @@ router.put('/:sessionId', authenticate, async (req: Request, res: Response) => {
   }
 });
 
+router.delete(
+  '/:sessionId',
+  authenticate,
+  async (req: Request, res: Response) => {
+    const { sessionId } = req.params;
+    const body = req.body as sessionInput;
+    try {
+      const deletedSession = await prisma.session.delete({
+        where: {
+          id: Number(sessionId)
+        }
+      });
+      res.json(deletedSession);
+    } catch (err) {
+      res.status(500).json({ error: "Couldn't delete this session" });
+    }
+  }
+);
+
 // sets
 router.get(
   '/:sessionId/sets',
