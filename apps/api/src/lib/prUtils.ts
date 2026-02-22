@@ -2,11 +2,14 @@ import { prisma } from './prisma.js';
 import { prInput } from '../types/workout.types.js';
 
 export const isPr = async (body: prInput) => {
-  const bestPr = await prisma.pR.findFirst({
-    where: { exerciseId: body.exerciseId },
+  const bestSet = await prisma.set.findFirst({
+    where: {
+      exerciseId: body.exerciseId,
+      id: { not: body.setId }
+    },
     orderBy: { score: 'desc' }
   });
-  return !bestPr || body.score > bestPr.score;
+  return !bestSet || body.score > bestSet.score;
 };
 
 export const createPr = async (body: prInput) => {
