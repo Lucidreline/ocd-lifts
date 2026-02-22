@@ -2,6 +2,7 @@ import { Request, Response, Router } from 'express';
 import { prisma } from '../lib/prisma.js';
 import { authenticate } from '../middleware/authenticate.js';
 import { exerciseInput } from '../types/workout.types.js';
+import { json } from 'node:stream/consumers';
 
 const router = Router();
 
@@ -42,5 +43,33 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
     res.status(500).json({ error: `Couldn't create your exersise!!` });
   }
 });
+
+router.put(
+  '/:exerciseId',
+  authenticate,
+  async (req: Request, res: Response) => {
+    const { exerciseId } = req.params;
+    const body = req.body as exerciseInput;
+    try {
+      const updatedExercise = await prisma.exercise.update({
+        where: {
+          id: Number(exerciseId)
+        },
+        data: {
+          name: body.name,
+          variation: body.variation,
+          repRange: body.repRange,
+          muscleGroups: {
+            deleteMany: {},
+            create: body.muscleGroups
+          }
+        }
+      });
+      res.json(updatedExercise);
+    } catch (err) {
+      res.status(500).json({ error: "Couldn't update your exercise" });
+    }
+  }
+);
 
 export default router;

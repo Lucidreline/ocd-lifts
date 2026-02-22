@@ -59,7 +59,6 @@ router.delete(
   authenticate,
   async (req: Request, res: Response) => {
     const { sessionId } = req.params;
-    const body = req.body as sessionInput;
     try {
       const deletedSession = await prisma.session.delete({
         where: {
