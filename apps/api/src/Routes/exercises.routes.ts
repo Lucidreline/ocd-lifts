@@ -2,7 +2,6 @@ import { Request, Response, Router } from 'express';
 import { prisma } from '../lib/prisma.js';
 import { authenticate } from '../middleware/authenticate.js';
 import { exerciseInput } from '../types/workout.types.js';
-import { json } from 'node:stream/consumers';
 
 const router = Router();
 
@@ -42,6 +41,29 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
     res.json(newExercise);
   } catch (err) {
     res.status(500).json({ error: `Couldn't create your exersise!!` });
+  }
+});
+
+router.post('/bulk', authenticate, async (req: Request, res: Response) => {
+  const exercises = req.body as exerciseInput[];
+
+  try {
+    const createdExercises = await prisma.$transaction(
+      exercises.map((exercise) =>
+        prisma.exercise.create({
+          data: {
+            ...exercise,
+            userId: req.userId!,
+            muscleGroups: {
+              create: exercise.muscleGroups
+            }
+          }
+        })
+      )
+    );
+    res.json(createdExercises);
+  } catch (err) {
+    res.status(500).json({ error: "Couldn't " });
   }
 });
 

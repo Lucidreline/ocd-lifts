@@ -105,6 +105,41 @@ router.get(
   }
 );
 
+// get exercises for session
+router.get(
+  '/:sessionId/suggested-exercises',
+  authenticate,
+  async (req: Request, res: Response) => {
+    const { sessionId } = req.params;
+    const userId = req.userId;
+
+    try {
+      const session = await prisma.session.findUnique({
+        where: { id: Number(sessionId) }
+      });
+
+      if (!session) {
+        res.status(404).json({ error: 'Session not found' });
+        return;
+      }
+
+      const suggestedExercises = await prisma.exercise.findMany({
+        where: {
+          userId,
+          isArchived: false,
+          categories: {
+            hasSome: session.categories
+          }
+        }
+      });
+
+      res.json(suggestedExercises);
+    } catch (err) {
+      res.status(500).json({ error: "Couldn't find suggested exercises" });
+    }
+  }
+);
+
 router.post(
   '/:sessionId/sets',
   authenticate,

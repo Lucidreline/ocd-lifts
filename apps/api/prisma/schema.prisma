@@ -41,6 +41,7 @@ model Exercise {
   userId    Int
   sets      Set[]
   PRs       PR[]
+  categories String[]
 
   muscleGroups MuscleGroup[]
   isArchived Boolean @default(false)
