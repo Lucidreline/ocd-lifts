@@ -1,8 +1,10 @@
 import { Request, Response, Router } from 'express';
 import { prisma } from '../lib/prisma.js';
-import { authenticate } from '../middleware/authenticate.js';
+
 import { prInput, sessionInput, setInput } from '../types/workout.types.js';
+import { authenticate } from '../middleware/authenticate.js';
 import { isPr, createPr } from '../lib/prUtils.js';
+import { calcScore } from '../lib/setUtils.js';
 
 const router = Router();
 
@@ -109,9 +111,7 @@ router.post(
   async (req: Request, res: Response) => {
     const body = req.body as setInput;
 
-    let score;
-    if (body.weightLbs === 0) score = body.repCount;
-    else score = body.repCount * body.weightLbs;
+    const score = calcScore(body);
 
     const { sessionId } = req.params;
     try {
