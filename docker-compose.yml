@@ -3,7 +3,7 @@ services:
     image: postgres:16-alpine
     restart: always
     networks:
-      - net
+      - ocd_net
     environment:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
@@ -17,7 +17,7 @@ services:
     image: dpage/pgadmin4
     restart: always
     networks:
-      - net
+      - ocd_net
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@admin.com
       PGADMIN_DEFAULT_PASSWORD: admin
@@ -27,8 +27,9 @@ services:
       - db
 
 networks:
-  net:
+  ocd_net:
     driver: bridge
+    external: true
 
 volumes:
   db-data:
