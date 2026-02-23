@@ -1,11 +1,19 @@
+import { Route, Routes } from 'react-router-dom'
 import './App.scss'
+import ExercisePage from './pages/exercises/Exercises.page'
+import SessionsPage from './pages/sessions/Sessions.page'
+import DashboardPage from './pages/dashboard/Dashboard.page'
 
 function App() {
 
   return (
-    <>
-     <h1>Test1</h1>
-    </>
+    <div className="app">
+      <Routes>
+        <Route path="/" element={<DashboardPage />} />
+        <Route path="/sessions" element={<SessionsPage />} />
+        <Route path="/exercises" element={<ExercisePage />} />
+      </Routes>
+    </div>
   )
 }
 
