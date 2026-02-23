@@ -1,14 +1,11 @@
 import React, { useEffect, useState } from "react"
 
-const LoginForm = () => {
-    const [username, setUsername] = useState("")
+interface LoginFormProps {
+    onLogin: () => void
+}
 
-    // fetch
-    // useEffect(() => {
-    //     fetch('http://localhost:3000/users/login')
-    //         .then(res => res.json())
-    //         .then(data => setUsername(data))
-    // })
+const LoginForm = ({ onLogin }: LoginFormProps) => {
+    const [username, setUsername] = useState("")
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { value } = e.target
@@ -27,6 +24,10 @@ const LoginForm = () => {
             if (response.ok) {
                 const { token } = await response.json()
                 localStorage.setItem('token', token)
+                onLogin()
+            }
+            else {
+                console.log("Login didn't work")
             }
         }
         catch (err) {
