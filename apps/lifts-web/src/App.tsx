@@ -13,6 +13,7 @@ function App() {
 
   const handleLogin = () => setIsLoggedIn(true)
 
+  // when not logged in, the only thing rendered will be the form
   if (!isLoggedIn) {
     return <LoginForm onLogin={handleLogin} />
   }

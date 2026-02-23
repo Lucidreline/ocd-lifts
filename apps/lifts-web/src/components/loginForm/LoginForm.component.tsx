@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react"
+import { apiFetch } from "../../utils/api"
 
 interface LoginFormProps {
     onLogin: () => void
@@ -7,18 +8,18 @@ interface LoginFormProps {
 const LoginForm = ({ onLogin }: LoginFormProps) => {
     const [username, setUsername] = useState("")
 
+    // reads value from my input and puts it into the state
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { value } = e.target
         setUsername(value)
     }
 
+    // hits the login endpoint and triggerss a login if the username was correct
     const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
         e.preventDefault()
-
         try {
-            const response = await fetch('http://localhost:3000/users/login', {
+            const response = await apiFetch('/users/login', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username }),
             })
             if (response.ok) {
