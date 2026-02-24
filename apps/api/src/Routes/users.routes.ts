@@ -58,7 +58,7 @@ router.post('/login', async (req: Request, res: Response) => {
     });
 
     if (!user) {
-      res.status(404).json({ error: `Couldn't find your boi ${username}` });
+      res.status(401).json({ error: `Couldn't find your boi ${username}` });
       return;
     }
 

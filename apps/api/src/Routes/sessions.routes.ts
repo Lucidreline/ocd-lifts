@@ -21,6 +21,25 @@ router.get('/', authenticate, async (req: Request, res: Response) => {
   }
 });
 
+router.get('/:id', authenticate, async (req: Request, res: Response) => {
+  const userId = req.userId;
+  const { id } = req.params;
+
+  try {
+    const session = await prisma.session.findUnique({
+      where: {
+        id: Number(id)
+      },
+      include: {
+        sets: true
+      }
+    });
+    res.json(session);
+  } catch (err) {
+    res.status(500).json({ error: `Couldn't find session for user ${userId}` });
+  }
+});
+
 router.post('/', authenticate, async (req: Request, res: Response) => {
   const body = req.body as sessionInput;
   try {
@@ -33,6 +52,23 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
     res.json(newSession);
   } catch (err) {
     res.status(500).json({ error: `Couldn't create new session` });
+  }
+});
+
+router.put('/:id', authenticate, async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const body = req.body as sessionInput;
+
+  try {
+    const updatedSession = await prisma.session.update({
+      where: {
+        id: Number(id)
+      },
+      data: body
+    });
+    res.json(updatedSession);
+  } catch (err) {
+    res.status(500).json({ error: `Couldn't update session ${id}` });
   }
 });
 
