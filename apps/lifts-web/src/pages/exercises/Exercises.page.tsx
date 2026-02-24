@@ -17,7 +17,7 @@ const ExercisePage = () => {
                     setExercises(data)
                 }
             } catch (error) {
-                console.log("Error finding your exercises")
+                console.error("Error finding your exercises")
             }
         }
         fetchExercises()
