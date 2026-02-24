@@ -24,6 +24,7 @@ export interface exerciseInput {
   name: string;
   variation: string;
   repRange: string;
+  categories: string[];
   muscleGroups: muscleGroupInput[];
 }
 

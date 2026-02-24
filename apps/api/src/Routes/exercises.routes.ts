@@ -43,4 +43,31 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
   }
 });
 
+router.post('/bulk', authenticate, async (req: Request, res: Response) => {
+  const exercises = req.body as exerciseInput[];
+
+  try {
+    const created = await prisma.$transaction(
+      exercises.map((exercise) =>
+        prisma.exercise.create({
+          data: {
+            ...exercise,
+            userId: req.userId!,
+            muscleGroups: {
+              create: exercise.muscleGroups
+            }
+          },
+          include: {
+            muscleGroups: true
+          }
+        })
+      )
+    );
+    res.json(created);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: "Couldn't bulk create your exercises!!" });
+  }
+});
+
 export default router;
