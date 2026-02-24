@@ -1,4 +1,3 @@
-import React from 'react'
 import type { Session } from '../../interfaces/session'
 import SessionsItem from '../sessionsItem/SessionsItem.component'
 

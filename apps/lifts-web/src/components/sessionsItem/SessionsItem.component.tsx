@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import type { Session } from '../../interfaces/session'
 
 interface SessionsItemProps {
@@ -6,7 +7,7 @@ interface SessionsItemProps {
 
 const SessionsItem = ({ session }: SessionsItemProps) => {
 
-    const formatDate = (dateString) => {
+    const formatDate = (dateString: string) => {
         if (!dateString) return "";
         return new Intl.DateTimeFormat('en-US', {
             month: 'short',
@@ -16,7 +17,7 @@ const SessionsItem = ({ session }: SessionsItemProps) => {
         }).format(new Date(dateString));
     };
 
-    const { createdAt, categories } = session
+    const { createdAt, categories, id } = session
     return (
         <div className="sessions-item">
             <div className="sessions-item-left">
@@ -24,7 +25,9 @@ const SessionsItem = ({ session }: SessionsItemProps) => {
             </div>
             <div className="sessions-item-right">
                 <div className="sessions-item-buttons">
-                    <button className="view-session">View</button>
+                    <Link to={`/sessions/${id}`}>
+                        <button className="view-session">View</button>
+                    </Link>
                     <button className="delete-session">Delete</button>
                 </div>
             </div>

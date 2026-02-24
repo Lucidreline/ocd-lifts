@@ -6,6 +6,7 @@ import DashboardPage from './pages/dashboard/Dashboard.page'
 import NavBar from './components/navBar/NavBar.component'
 import LoginForm from './components/loginForm/LoginForm.component'
 import { useState } from 'react'
+import SessionPage from './pages/session/Session.page'
 
 function App() {
 
@@ -24,6 +25,7 @@ function App() {
       <Routes>
         <Route path="/" element={<DashboardPage />} />
         <Route path="/sessions" element={<SessionsPage />} />
+        <Route path="/sessions/:sessionId" element={<SessionPage />} />
         <Route path="/exercises" element={<ExercisePage />} />
       </Routes>
     </div>
