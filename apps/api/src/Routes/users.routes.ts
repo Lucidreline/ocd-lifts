@@ -51,11 +51,14 @@ router.post('/', async (req: Request, res: Response) => {
 
 router.post('/login', async (req: Request, res: Response) => {
   const { username } = req.body as userInput;
+  console.log(username);
 
   try {
     const user = await prisma.user.findUnique({
       where: { username }
     });
+
+    console.log(user);
 
     if (!user) {
       res.status(401).json({ error: `Couldn't find your boi ${username}` });
@@ -71,6 +74,7 @@ router.post('/login', async (req: Request, res: Response) => {
 
     res.json({ token });
   } catch (err) {
+    console.log(err);
     res.status(500).json({ error: `Couldn't log you in boss` });
   }
 });

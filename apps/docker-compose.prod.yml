@@ -1,0 +1,50 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    networks:
+      - internal
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: workout_db
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+  api:
+    image: lucidreline/lifts-api:latest
+    restart: unless-stopped
+    ports:
+      - "3847:3000"
+    networks:
+      - internal
+    environment:
+      DATABASE_URL: postgresql://user:password@db:5432/workout_db
+      JWT_SECRET: 22c8ee911a6042909791d6cbf78e3f84b1f76a2bdf6931a35e508c44cbdcdbae
+      PORT: "3000"
+    depends_on:
+      - db
+
+  web:
+    image: lucidreline/lifts-web:latest
+    restart: unless-stopped
+    networks:
+      - internal
+      - gateway_network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.lifts.rule=Host(`lifts.vendingmachine.gov`)"
+      - "traefik.http.routers.lifts.entrypoints=web"
+      - "traefik.http.services.lifts.loadbalancer.server.port=80"
+      - "traefik.docker.network=gateway_network"
+    depends_on:
+      - api
+
+networks:
+  internal:
+    driver: bridge
+  gateway_network:
+    external: true
+
+volumes:
+  db-data:

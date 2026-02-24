@@ -31,7 +31,11 @@ router.get('/:id', authenticate, async (req: Request, res: Response) => {
         id: Number(id)
       },
       include: {
-        sets: true
+        sets: {
+          include: {
+            exercise: true
+          }
+        }
       }
     });
     res.json(session);

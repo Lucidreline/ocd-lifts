@@ -18,4 +18,9 @@ export interface Set {
     repCount: number
     weightLbs: number
     score: number
+    exercise?: {
+        id: number
+        name: string
+        variation?: string
+    }
 }
